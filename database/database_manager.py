@@ -159,13 +159,13 @@ def load_all_datasets():
     return results
 
 
-def insert_model(date, filename, test_split, mae):
+def insert_model(date, filename, mae):
     conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute("""
                 INSERT INTO models (date, filename, mae)
-                VALUES (?, ?, ?,)
+                VALUES (?, ?, ?)
                 """, (
                     str(date),
                     filename,
