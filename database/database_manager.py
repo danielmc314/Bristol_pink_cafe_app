@@ -159,13 +159,13 @@ def load_all_datasets():
     return results
 
 
-def insert_model(date, filename, mae):
+def insert_model(date, filename, test_split, mae):
     conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute("""
                 INSERT INTO models (date, filename, mae)
-                VALUES (?, ?, ?)
+                VALUES (?, ?, ?,)
                 """, (
                     str(date),
                     filename,
@@ -180,7 +180,7 @@ def get_models():
     cursor = conn.cursor()
 
     cursor.execute("""
-                   SELECT filename from models""")
+                   SELECT filename FROM models""")
     
     results = cursor.fetchall()
     conn.commit()
@@ -191,6 +191,46 @@ def get_models():
     
     #results is a list of tuples so we need to build a new list containing just the values for filename
     return [row[0] for row in results]
+
+def load_models(start_date, end_date):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""SELECT * FROM models
+                   WHERE date >= ? AND date <= ?
+                   ORDER BY date""", (start_date, end_date)
+                   )
+    
+    results = cursor.fetchall()
+    conn.commit()
+    conn.close()
+
+    return results
+
+def delete_model(model_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""DELETE FROM models WHERE id = ?"""
+                   ,(model_id,))
+    
+    conn.commit()
+    conn.close()
+
+def load_all_models():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+                   SELECT * FROM models""")
+    
+    results = cursor.fetchall()
+    conn.commit()
+    conn.close()
+
+    return results
+
+
 
 
     

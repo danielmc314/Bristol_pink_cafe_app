@@ -29,7 +29,7 @@ class PredictionPage(QWidget):
 
         self.end_date = QDateEdit()
         self.end_date.setCalendarPopup(True)
-        self.end_date.setDate(QDate(2025, 10, 31))
+        self.end_date.setDate(QDate.currentDate())
 
         self.model_selection = QComboBox()
         

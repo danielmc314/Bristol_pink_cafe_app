@@ -1,0 +1,10 @@
+required libraries
+
+pandas
+numpy
+scikit-learn
+plotly
+PySide6
+PySide6-WebEngine
+joblib
+sqlite3

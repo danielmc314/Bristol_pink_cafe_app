@@ -7,6 +7,7 @@ from ui.dashboard_page import DashboardPage
 from ui.data_managment_page import DataManagmentPage
 from ui.predictions_page import PredictionPage
 from ui.model_evaluation_page import EvaluationPage
+#from ui.compare_models_page import CompareModelsPage
 
 
 class AppWindow(QWidget):
@@ -26,12 +27,14 @@ class AppWindow(QWidget):
         data_button = QPushButton("Data Management")
         prediction_button = QPushButton("Prediction")
         evaluation_button = QPushButton("Model Training")
+        #compare_button   = QPushButton("Compare Models")
 
         sidebar_layout.addWidget(title)
         sidebar_layout.addWidget(dashboard_button)
         sidebar_layout.addWidget(data_button)
         sidebar_layout.addWidget(prediction_button)
         sidebar_layout.addWidget(evaluation_button)
+        #sidebar_layout.addWidget(compare_button)
         sidebar_layout.addStretch()
 
         sidebar_widget = QWidget()
@@ -50,11 +53,13 @@ class AppWindow(QWidget):
         self.data_managment_page = DataManagmentPage()
         self.predictions_page = PredictionPage()
         self.model_evaluation_page = EvaluationPage()
+        #self.compare_models_page = CompareModelsPage()
 
         self.pages.addWidget(self.dashboard_page)
         self.pages.addWidget(self.data_managment_page)
         self.pages.addWidget(self.predictions_page)
         self.pages.addWidget(self.model_evaluation_page)
+        #self.pages.addWidget(self.compare_models_page)
 
         self.pages.setCurrentWidget(self.dashboard_page)
 
@@ -70,6 +75,9 @@ class AppWindow(QWidget):
         evaluation_button.clicked.connect(
             lambda: self.pages.setCurrentWidget(self.model_evaluation_page)
         )
+        #compare_button.clicked.connect(
+        #    lambda: self.pages.setCurrentWidget(self.compare_models_page)
+        #)
 
         main_layout.addWidget(sidebar_widget)
         main_layout.addWidget(self.pages)

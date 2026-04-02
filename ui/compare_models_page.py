@@ -1,15 +1,15 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QFrame, QPushButton, QDateEdit, QLineEdit, QComboBox, QSlider)
+    QFrame, QPushButton, QDateEdit, QLineEdit, QComboBox, )
 from PySide6.QtCore import QDate, Qt
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from database.database_manager import load_sales_data
-from analytics.models import train_ai_models
+from analytics.models import predict_future_sales
 
-from visulisations.graphs import create_predicted_vs_actual
+from visulisations.graphs import create_model_comparison_chart
 
 
-class EvaluationPage(QWidget):
+class CompareModelsPage(QWidget):
 
     def __init__(self):
         super().__init__()
@@ -69,18 +69,31 @@ class EvaluationPage(QWidget):
         end_layout.addWidget(self.end_date)
 
         # model virsion imput field
-        version_layout = QVBoxLayout()
-        version_layout.setSpacing(2)
-        version_layout.setContentsMargins(0, 0, 0, 0)
+        model_1_layout = QVBoxLayout()
+        model_1_layout.setSpacing(2)
+        model_1_layout.setContentsMargins(0, 0, 0, 0)
+        
+        model_1_label = QLabel("Select First Model")
+        self.model_1_selection = QComboBox()
+        self.model_1_selection.setFixedWidth(220)
 
-        version_label = QLabel("New Model Version")
-        self.file_version = QLineEdit()
-        self.file_version.setPlaceholderText("e.g. v8")
-        self.file_version.setFixedWidth(220)
-        self.file_version.setFixedHeight(field_height)
 
-        version_layout.addWidget(version_label)
-        version_layout.addWidget(self.file_version)
+        model_1_layout.addWidget(model_1_label)
+        model_1_layout.addWidget(self.model_1_selection)
+
+          # model virsion imput field
+        model_2_layout = QVBoxLayout()
+        model_2_layout.setSpacing(2)
+        model_2_layout.setContentsMargins(0, 0, 0, 0)
+        
+        model_2_label = QLabel("Select Second Model")
+        self.model_2_selection = QComboBox()
+        self.model_2_selection.setFixedWidth(220)
+
+
+        model_2_layout.addWidget(model_2_label)
+        model_2_layout.addWidget(self.model_2_selection)
+
 
         #create model button
         self.create_models_button = QPushButton("Create Models")
@@ -94,56 +107,15 @@ class EvaluationPage(QWidget):
         #add elemements to form row
         form_row.addLayout(start_layout)
         form_row.addLayout(end_layout)
-        form_row.addLayout(version_layout)
+        form_row.addLayout(model_1_layout)
+        form_row.addLayout(model_2_layout)
         form_row.addWidget(self.create_models_button, alignment=Qt.AlignBottom)
         form_row.addStretch()
 
         
-
-        #------------ second row test/train slider and create models button----------------
-
-
-        bottom_row = QHBoxLayout()
-        bottom_row.setSpacing(10)
-
-        model_type_layout = QVBoxLayout()
-
-        model_type_label = QLabel("Select model type:")
-        self.model_type_dropdown = QComboBox()
-        self.model_type_dropdown.setFixedWidth(field_width)
-        self.model_type_dropdown.setFixedHeight(field_height)
-
-        self.model_type_dropdown.addItem("Random Forest", "random_forest")
-        self.model_type_dropdown.addItem("Linear Regression", "linear_regression")
-
-        model_type_layout.addWidget(model_type_label)
-        model_type_layout.addWidget(self.model_type_dropdown)
-
-        slider_layout = QVBoxLayout()
-        slider_layout.setSpacing(1)
-        slider_layout.setContentsMargins(0, 0, 0, 0)
-
-        #label to show current split on slider
-        self.slider_label = QLabel("Train/Test Split: 80% / 20%")
-
-        self.training_vs_test_split_slider = QSlider(Qt.Horizontal)
-        self.training_vs_test_split_slider.setMinimum(50)
-        self.training_vs_test_split_slider.setMaximum(90)
-        self.training_vs_test_split_slider.setValue(80)
-        self.training_vs_test_split_slider.valueChanged.connect(self.update_slider_label)
-
-        slider_layout.addWidget(self.slider_label)
-        slider_layout.addWidget(self.training_vs_test_split_slider)
-
-        bottom_row.addLayout(model_type_layout)
-        bottom_row.addLayout(slider_layout)
-        
-    
-
-
         # Add rows to card
         filter_card_layout.addLayout(form_row)
-        filter_card_layout.addLayout(bottom_row)
+        
         
         #add filter card and contents to main layout with top alignement
         main_layout.addWidget(filter_card, 0, Qt.AlignTop)
@@ -156,13 +128,12 @@ class EvaluationPage(QWidget):
         cards_row = QHBoxLayout()
         cards_row.setSpacing(15)
 
-        self.cappuccino_model_acc_card, self.cappuccino_model_acc_value = self.create_card("Cappuccino model accuracy:", "0")
-        self.americano_model_acc_card, self.americano_model_acc_value = self.create_card("Americano model accuracy", "0")
-        self.croissant_model_acc_card, self.croissant_model_acc_value = self.create_card("Croissant model accuracy", "0")
+        self.model_1_acc_card, self.model_1_acc_value = self.create_card("model 1 accuracy:", "0")
+  
+        self.cmodel_2_acc_card, self.model_2_acc_value = self.create_card("model 2 accuracy", "0")
 
-        cards_row.addWidget(self.cappuccino_model_acc_card)
-        cards_row.addWidget(self.americano_model_acc_card)
-        cards_row.addWidget(self.croissant_model_acc_card)
+        cards_row.addWidget(self.model_1_acc_card)
+        cards_row.addWidget(self.model_2_acc_card)
 
         main_layout.addLayout(cards_row, 1)
         
@@ -171,8 +142,8 @@ class EvaluationPage(QWidget):
         charts_row.setSpacing(15)
         
         # Main chart on left side
-        self.predicted_vs_actual_chart = self.create_chart_placeholder("Sales Over Time")
-        charts_row.addWidget(self.predicted_vs_actual_chart)
+        self.model_1_vs_model_2 = self.create_chart_placeholder("Sales Over Time")
+        charts_row.addWidget(self.model_1_vs_model_2)
 
         main_layout.addLayout(charts_row, 3)
 
@@ -210,8 +181,8 @@ class EvaluationPage(QWidget):
         # get user selected variables for model training
         start_date = self.start_date.date().toString("yyyy-MM-dd")
         end_date = self.end_date.date().toString("yyyy-MM-dd")
-        file_version = self.file_version.text()
-        model_type = self.model_type_dropdown.currentData()
+        model_1 = self.model_1_selection.currentData()
+        model_2 = self.model_2_selection.currentData()
         
         train_ratio = self.get_train_split_ratio()
         test_ratio = 1 - train_ratio
@@ -221,21 +192,23 @@ class EvaluationPage(QWidget):
         data = load_sales_data(start_date, end_date)
 
         #train models
-        results, predictions = train_ai_models(data, file_version, test_ratio, model_type)
+        model_1_predictions, predictions_long  = predict_future_sales(data, model_1,)
+        model_2_predictions,  predictions_long= predict_future_sales(data, model_2,)
+
+        actual_sales  = load_sales_data(start_date, end_date)
+        actual_df = actual_sales.pivot(index="date", columns="product", values="sales")
+
 
         #get data for error cards
-        cappuccino_model_err = results[results["product"] == "cappuccino"]["mae"].values[0]
-        americano_model_err = results[results["product"] =="americano"]["mae"].values[0]
-        croissant_model_err = results[results["product"] =="croissant"]["mae"].values[0]
-
-        self.croissant_model_acc_value.setText(f"{croissant_model_err}%")
-        self.cappuccino_model_acc_value.setText(f"{cappuccino_model_err}%")
-        self.americano_model_acc_value.setText(f"{americano_model_err}%")
-
+        #model_1_err = model_1_results[model_1_results["product"] == "cappuccino"]["mae"].values[0]
+        #model_2_err = model_2_results[model_2_results["product"] =="americano"]["mae"].values[0]
+        
+        #self.model_1_acc_value.setText(f"Model 1 err: {model_1_err}")
+        #self.model_2_acc_value.setText(f"Model 2 err: {model_2_err}")
         #create prediction vs actual sales grph
-        predicted_vs_actual_graph = create_predicted_vs_actual(predictions)
+        model_vs_model_graph = create_model_comparison_chart(actual_df, model_1_predictions, model_2_predictions, model_1, model_2)
         #display chart
-        self.show_chart(self.predicted_vs_actual_chart, predicted_vs_actual_graph)
+        self.show_chart(self.model_1_vs_model_2, model_vs_model_graph)
 
         
 
@@ -258,9 +231,3 @@ class EvaluationPage(QWidget):
         view = QWebEngineView()
         view.setHtml(html)
         layout.addWidget(view)
-
-    def update_slider_label(self,value):
-        self.slider_label.setText(f"Train/Test Split: {value}% / {100 - value}%")    
-
-    def get_train_split_ratio(self):
-        return self.training_vs_test_split_slider.value() / 100

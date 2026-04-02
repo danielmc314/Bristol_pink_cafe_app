@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error
 import joblib
 import datetime
@@ -27,7 +28,7 @@ def generate_training_data(sales_data):
 
     return training_data
 
-def train_ai_models(sales_data, file_version):
+def train_ai_models(sales_data, file_version, test_ratio, model_type):
     
     df = generate_training_data(sales_data)
 
@@ -51,11 +52,14 @@ def train_ai_models(sales_data, file_version):
         
         # We give the AI 80% of the past data to learn from.
         # We hide the remaining 20% to test it like a pop-quiz later.
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_ratio, random_state=42, shuffle=False)
 
-        # 5. Initialize the Algorithm
-        # n_estimators=100 means we are using 100 "decision trees" working together
-        model = RandomForestRegressor(n_estimators=100, random_state=42)
+        # 5. Initialize the Algorithms dependent on user selection
+        if model_type == "linear_regression":
+            model = LinearRegression()
+        elif model_type == "random_forest":
+            # n_estimators=100 means we are using 100 "decision trees" working together
+            model = RandomForestRegressor(n_estimators=100, random_state=42)
         
         # 6. Train the AI! (This is where the actual learning happens)
         model.fit(X_train, y_train)
@@ -72,7 +76,7 @@ def train_ai_models(sales_data, file_version):
         
         # 8. Save the trained model to your hard drive
         #query models database for the most recent versions of each model
-        filename = f'{item}_model_{file_version}.pkl'
+        filename = f'{item}_{model_type}_model_{file_version}.pkl'
             
 
         joblib.dump(model, filename)
@@ -103,11 +107,11 @@ def train_ai_models(sales_data, file_version):
     predictions_df = pd.DataFrame(prediction_row)
     
     #initilise model version
-    model_version = f'model_{file_version}'
+    model_version = f'{model_type}_model_{file_version}'
 
     #insert model version into database
     date = pd.Timestamp.today().normalize()
-    insert_model(date, model_version, error)
+    insert_model(date, model_version, error,)
 
     print("All models successfully trained and ready for the Dashboard!")
 

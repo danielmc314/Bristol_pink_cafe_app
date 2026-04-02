@@ -170,3 +170,47 @@ def create_predicted_sales_chart(data):
     )
 
     return fig
+
+
+
+
+
+def create_model_comparison_chart(actual_df, model_1_df, model_2_df, model_1_name, model_2_name, product):
+    actual_product = actual_df[actual_df["product"] == product][["date", "sales"]].copy()
+    model_1_product = model_1_df[model_1_df["product"] == product][["date", "predicted"]].copy()
+    model_2_product = model_2_df[model_2_df["product"] == product][["date", "predicted"]].copy()
+
+    merged = actual_product.merge(model_1_product, on="date", how="inner")
+    merged = merged.merge(model_2_product, on="date", how="inner", suffixes=(f"_{model_1_name}", f"_{model_2_name}"))
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=merged["date"],
+        y=merged["sales"],
+        mode="lines+markers",
+        name="Actual Sales"
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=merged["date"],
+        y=merged[f"predicted_{model_1_name}"],
+        mode="lines+markers",
+        name=f"{model_1_name} Prediction"
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=merged["date"],
+        y=merged[f"predicted_{model_2_name}"],
+        mode="lines+markers",
+        name=f"{model_2_name} Prediction"
+    ))
+
+    fig.update_layout(
+        title=f"{product.title()} Sales Comparison",
+        xaxis_title="Date",
+        yaxis_title="Sales",
+        template="plotly_white"
+    )
+
+    return fig
